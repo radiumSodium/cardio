@@ -5,6 +5,10 @@
 The platform allows users to easily find, book, and manage care services such as babysitting, elderly care, and special home care.
 
 ---
+## 🖼️ Website Preview
+<img src="/public/1.png>
+
+---
 
 ## 🌐 Project Overview
 
@@ -13,5 +17,5 @@ Users can book caretakers based on their required duration and location, while t
 
 ---
 
-## 🖼️ Website Preview
+
 
