@@ -6,7 +6,7 @@ The platform allows users to easily find, book, and manage care services such as
 
 ---
 ## 🖼️ Website Preview
-<img src="/public/1.png>
+<img src="public/1.png" alt="Preview">
 
 ---
 
