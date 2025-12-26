@@ -7,6 +7,9 @@ import { Toaster } from "@/components/ui/sonner";
 export const metadata = {
   title: "Care.xyz - Trusted Care Services",
   description: "Find reliable caretakers for your loved ones",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }) {
