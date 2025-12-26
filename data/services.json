@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Baby Sitting",
+    "description": "Reliable and caring babysitters for your little ones. We ensure safety, engagement, and fun interactions.",
+    "pricePerHour": 500,
+    "image": "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800&auto=format&fit=crop&q=60",
+    "category": "Child Care"
+  },
+  {
+    "name": "Elderly Care",
+    "description": "Compassionate support for seniors including mobility assistance, medication reminders, and companionship.",
+    "pricePerHour": 800,
+    "image": "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=800&auto=format&fit=crop&q=60",
+    "category": "Elderly Care"
+  },
+  {
+    "name": "Sick Care",
+    "description": "Specialized care for sick family members requiring constant attention and basic medical monitoring.",
+    "pricePerHour": 1000,
+    "image": "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&auto=format&fit=crop&q=60",
+    "category": "Medical Support"
+  }
+]
