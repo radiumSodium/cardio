@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx ts-node scripts/seed.ts"
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",
