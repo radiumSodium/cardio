@@ -11,7 +11,11 @@ export async function GET(req) {
   try {
     let query = {};
     if (userId) {
-        query = { userId };
+        query.userId = userId;
+    }
+    const caretakerId = searchParams.get("caretakerId");
+    if (caretakerId) {
+        query.caretakerId = caretakerId;
     }
     
     const bookings = await Booking.find(query).populate("serviceId", "name").sort({ createdAt: -1 });

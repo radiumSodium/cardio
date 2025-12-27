@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const BookingSchema = new mongoose.Schema({
   userId: { type: String, required: true }, 
+  caretakerId: { type: String }, // Firebase UID of the caretaker
   serviceId: { type: mongoose.Schema.Types.ObjectId, ref: "Service", required: true },
   duration: { type: String, required: true },
   totalCost: { type: Number, required: true },

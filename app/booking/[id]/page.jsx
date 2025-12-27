@@ -12,12 +12,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ServiceProps } from "@/components/ServiceCard";
 
-const divisions = ["Dhaka", "Chittagong", "Rajshahi", "Khulna"];
+const divisions = ["Dhaka", "Chattogram", "Rajshahi", "Khulna", "Barishal", "Sylhet", "Rangpur", "Mymensingh"];
 const districts = {
-  "Dhaka": ["Dhaka", "Gazipur", "Narayanganj"],
-  "Chittagong": ["Chittagong", "Cox's Bazar", "Comilla"],
-  "Rajshahi": ["Rajshahi", "Bogra", "Pabna"],
-  "Khulna": ["Khulna", "Jessore", "Kushtia"]
+  "Dhaka": ["Dhaka", "Gazipur", "Kishoreganj", "Manikganj", "Munshiganj", "Narayanganj", "Narsingdi", "Tangail", "Faridpur", "Gopalganj", "Madaripur", "Rajbari", "Shariatpur"],
+  "Chattogram": ["Chattogram", "Cox's Bazar", "Cumilla", "Brahmanbaria", "Chandpur", "Lakshmipur", "Noakhali", "Feni", "Khagrachhari", "Rangamati", "Bandarban"],
+  "Rajshahi": ["Rajshahi", "Natore", "Naogaon", "Chapainawabganj", "Pabna", "Bogura", "Sirajganj", "Joypurhat"],
+  "Khulna": ["Khulna", "Bagherhat", "Satkhira", "Jashore", "Magura", "Jhenaidah", "Narail", "Kushtia", "Chuadanga", "Meherpur"],
+  "Barishal": ["Barishal", "Jhalokati", "Pirojpur", "Bhola", "Patuakhali", "Barguna"],
+  "Sylhet": ["Sylhet", "Moulvibazar", "Habiganj", "Sunamganj"],
+  "Rangpur": ["Rangpur", "Gaibandha", "Nilphamari", "Kurigram", "Lalmonirhat", "Dinajpur", "Thakurgaon", "Panchagarh"],
+  "Mymensingh": ["Mymensingh", "Jamalpur", "Netrokona", "Sherpur"]
 };
 
 export default function BookingPage() {
@@ -70,37 +74,44 @@ export default function BookingPage() {
   const handleBooking = async (e) => {
     e.preventDefault();
     if (!division || !district || !address || !duration) return;
-
     if (!user) return;
 
     setIsSubmitting(true);
     try {
-      // NOTE: We should eventually move this to backend /api/booking to save to MongoDB
-      // For now, keeping Firebase logic as placeholder or redundant?
-      // User asked for MongoDB. So we should probably POST to /api/booking
-      
-      // Let's create the booking via API
-      // But for now, user asked to "put the services in mongo... and add a payment method"
-      // I will assume we want to save booking to MongoDB. 
-      // I will rewrite this to use an API route for booking creation.
-      
-    const res = await fetch("/api/create-checkout-session", {
+      // 1. Create Booking in DB
+      const bookingRes = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+              userId: user.uid,
+              serviceId: service._id || service.id,
+              duration: `${duration} ${durationType}`,
+              totalCost,
+              location: { division, district, address },
+              status: "pending"
+          })
+      });
+
+      if (!bookingRes.ok) throw new Error("Booking creation failed");
+      const { booking } = await bookingRes.json();
+
+      // 2. Initiate Payment (Stripe)
+      const paymentRes = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.uid,
-          serviceId: service._id || service.id,
-          duration: `${duration} ${durationType}`,
-          location: { division, district, address },
-          totalCost
+          bookingId: booking._id,
+          serviceName: service.name,
+          amount: totalCost
         })
       });
 
-      if (res.ok) {
-        const { url } = await res.json();
+      if (paymentRes.ok) {
+        const { url } = await paymentRes.json();
         window.location.href = url; // Redirect to Stripe
       } else {
         console.error("Payment initialization failed");
+        router.push("/dashboard/user"); // Fallback to dashboard if payment fails, booking is saved
       }
     } catch (error) {
       console.error("Booking failed", error);

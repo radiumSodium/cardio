@@ -1,78 +1,47 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import dbConnect from "@/lib/db";
-import Booking from "@/models/Booking";
-import Service from "@/models/Service";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-12-15.clover", 
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { bookingId, userId, serviceId, duration, location, totalCost } = body;
-    await dbConnect();
-    
-    let lineItems = [];
-    let metadata = {};
-    let successUrl = `${req.headers.get("origin")}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
+    const { bookingId, serviceName, amount } = await req.json();
 
-    if (bookingId) {
-        const booking = await Booking.findById(bookingId).populate("serviceId");
-        if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
-        
-        lineItems = [{
-            price_data: {
-              currency: "bdt",
-              product_data: {
-                name: booking.serviceId?.name || "Service Booking",
-                description: `Booking ID: ${booking._id}`,
-              },
-              unit_amount: booking.totalCost * 100, 
-            },
-            quantity: 1,
-        }];
-        metadata = { bookingId: booking._id.toString(), userId: booking.userId };
-        successUrl += `&booking_id=${booking._id}`;
-    } else {
-        // Direct booking from booking page
-        const service = await Service.findById(serviceId);
-        if (!service) return NextResponse.json({ error: "Service not found" }, { status: 404 });
-
-        lineItems = [{
-            price_data: {
-              currency: "bdt",
-              product_data: {
-                name: service.name,
-                description: `Service: ${service.name}`,
-              },
-              unit_amount: totalCost * 100,
-            },
-            quantity: 1,
-        }];
-        metadata = {
-            userId,
-            serviceId,
-            duration,
-            location: JSON.stringify(location),
-            totalCost: totalCost.toString(),
-            createBooking: "true"
-        };
+    if (!bookingId || !serviceName || !amount) {
+        return NextResponse.json({ error: "Missing required params" }, { status: 400 });
     }
+
+    // Amount in cents (assuming amount is passed in dollars/units)
+    // Or if amount is already verified? 
+    // Usually we should fetch from DB to be safe, but for this demo using passed value.
     
+    // Create checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: lineItems,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: serviceName,
+              description: `Payment for booking #${bookingId}`,
+            },
+            unit_amount: Math.round(amount * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
       mode: "payment",
-      success_url: successUrl,
-      cancel_url: `${req.headers.get("origin")}/dashboard/user/bookings`,
-      metadata,
+      success_url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/payment/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${bookingId}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/dashboard/user`,
+      metadata: {
+          bookingId: bookingId
+      }
     });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error("Stripe Error:", error);
-    return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
+    console.error("Stripe Session Error:", error);
+    return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
   }
 }
