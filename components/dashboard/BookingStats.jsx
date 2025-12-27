@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
 
 export default function BookingStats({ role }) {
-  const { dbUser } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState({ total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 });
   
   useEffect(() => {
     async function fetchStats() {
-      if (!dbUser) return;
+      if (!user) return;
       try {
-        const res = await fetch(`/api/stats?role=${role}&userId=${role === 'admin' ? '' : dbUser.uid}`);
+        const res = await fetch(`/api/stats?role=${role}&userId=${role === 'admin' ? '' : user.uid}`);
         const data = await res.json();
         if (data && !data.error) {
             setStats(data);
@@ -22,7 +22,7 @@ export default function BookingStats({ role }) {
       }
     }
     fetchStats();
-  }, [dbUser, role]);
+  }, [user, role]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">

@@ -13,18 +13,18 @@ import BookingTimeline from "./BookingTimeline";
 import { useRouter } from "next/navigation";
 
 export default function BookingList({ role, limit }) {
-  const { dbUser } = useAuth();
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   async function fetchBookings() {
-// ... existing fetch logic ...
-      if (!dbUser) return;
+      if (!user) return;
       try {
         let url = `/api/bookings?`;
-        if (role === 'user') url += `userId=${dbUser.uid}`;
-        if (role === 'caretaker') url += `caretakerId=${dbUser.uid}`; 
+        // Admin gets all, others get theirs
+        if (role === 'user') url += `userId=${user.uid}`;
+        if (role === 'caretaker') url += `caretakerId=${user.uid}`; 
         
         const res = await fetch(url);
         const data = await res.json();
@@ -41,7 +41,7 @@ export default function BookingList({ role, limit }) {
 
   useEffect(() => {
     fetchBookings();
-  }, [dbUser, role, limit]);
+  }, [user, role, limit]);
   
   const handlePay = async (booking) => {
     try {
@@ -127,7 +127,7 @@ export default function BookingList({ role, limit }) {
                         <StatusBadge status={booking.status} />
                     </TableCell>
                     <TableCell>
-                         <div className="flex gap-2 items-center">
+                     <div className="flex gap-2 items-center">
                              {role !== 'user' && (
                                 <Select onValueChange={(val) => updateStatus(booking._id, val)} defaultValue={booking.status}>
                                     <SelectTrigger className="w-[110px] bg-slate-900 border-white/20 h-8 text-xs">
@@ -141,10 +141,17 @@ export default function BookingList({ role, limit }) {
                                     </SelectContent>
                                 </Select>
                              )}
-                             {role === 'user' && booking.paymentStatus !== 'paid' && booking.status !== 'cancelled' && (
-                                 <Button size="sm" onClick={() => handlePay(booking)} className="h-8 bg-green-600 hover:bg-green-700 text-white font-bold">
-                                     Pay Now
-                                 </Button>
+                             {role === 'user' && booking.status === 'pending' && booking.status !== 'cancelled' && (
+                                 <div className="flex gap-2">
+                                     {booking.paymentStatus !== 'paid' && (
+                                        <Button size="sm" onClick={() => handlePay(booking)} className="h-8 bg-green-600 hover:bg-green-700 text-white font-bold">
+                                            Pay Now
+                                        </Button>
+                                     )}
+                                     <Button size="sm" variant="destructive" onClick={() => updateStatus(booking._id, 'cancelled')} className="h-8 font-bold">
+                                            Cancel
+                                     </Button>
+                                 </div>
                              )}
                          </div>
                     </TableCell>
